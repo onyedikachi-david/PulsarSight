@@ -1,47 +1,69 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Blocks, 
-  ArrowLeftRight, 
-  Shield, 
-  FileText, 
-  Activity,
-  Settings,
-  BarChart3
-} from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Home, Blocks, FileText, Activity, Users, Database } from 'lucide-react';
+import NavItem from './ui/NavItem';
 
-const navigation = [
-  { name: 'Dashboard', icon: LayoutDashboard },
-  { name: 'Blocks', icon: Blocks },
-  { name: 'Transactions', icon: ArrowLeftRight },
-  { name: 'Validators', icon: Shield },
-  { name: 'Proposals', icon: FileText },
-  { name: 'Live Data', icon: Activity },
-  { name: 'Parameters', icon: Settings },
-  { name: 'Analytics', icon: BarChart3 },
-];
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-export default function Sidebar() {
-  const [active, setActive] = React.useState('Dashboard');
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const location = useLocation();
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-[calc(100vh-4rem)]">
-      <nav className="p-4 space-y-1">
-        {navigation.map(({ name, icon: Icon }) => (
-          <button
-            key={name}
-            onClick={() => setActive(name)}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm ${
-              active === name
-                ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-            }`}
-          >
-            <Icon className="h-5 w-5" />
-            <span>{name}</span>
-          </button>
-        ))}
+    <aside
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 transform transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:relative lg:translate-x-0`}
+    >
+      <div className="h-16 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
+        <Link to="/" className="text-xl font-bold text-gray-800 dark:text-white">
+          PulsarSight
+        </Link>
+      </div>
+      <nav className="mt-8">
+        <div className="px-4 space-y-2">
+          <NavItem
+            to="/"
+            icon={<Home className="h-5 w-5" />}
+            text="Dashboard"
+            isActive={location.pathname === '/'}
+          />
+          <NavItem
+            to="/blocks"
+            icon={<Blocks className="h-5 w-5" />}
+            text="Blocks"
+            isActive={location.pathname === '/blocks'}
+          />
+          <NavItem
+            to="/transactions/recent"
+            icon={<Activity className="h-5 w-5" />}
+            text="Transactions"
+            isActive={location.pathname === '/transactions/recent'}
+          />
+          <NavItem
+            to="/validators"
+            icon={<Users className="h-5 w-5" />}
+            text="Validators"
+            isActive={location.pathname === '/validators'}
+          />
+          <NavItem
+            to="/tokens"
+            icon={<Database className="h-5 w-5" />}
+            text="Tokens"
+            isActive={location.pathname === '/tokens'}
+          />
+          <NavItem
+            to="/contracts"
+            icon={<FileText className="h-5 w-5" />}
+            text="Contracts"
+            isActive={location.pathname === '/contracts'}
+          />
+        </div>
       </nav>
     </aside>
   );
-}
+};
+
+export default Sidebar;

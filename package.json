@@ -10,14 +10,30 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@solana/web3.js": "^0.30.8",
+    "assert": "^2.1.0",
+    "buffer": "^6.0.3",
+    "clsx": "^2.1.1",
+    "crypto-browserify": "^3.12.1",
+    "date-fns": "^3.3.1",
+    "https-browserify": "^1.0.0",
     "lucide-react": "^0.344.0",
+    "os-browserify": "^0.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "react-swipeable": "^7.0.2",
     "recharts": "^2.12.2",
-    "date-fns": "^3.3.1"
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "tailwind-merge": "^2.5.4",
+    "url": "^0.11.4"
   },
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@eslint/js": "^9.9.1",
+    "@types/node": "^22.9.1",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -27,9 +43,12 @@
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
     "postcss": "^8.4.35",
+    "process": "^0.11.10",
+    "rollup-plugin-node-polyfills": "^0.2.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
+    "util": "^0.12.5",
     "vite": "^5.4.2"
   }
 }
