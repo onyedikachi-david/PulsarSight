@@ -9,6 +9,8 @@ import BlockList from './components/BlockList';
 import TransactionList from './components/TransactionList';
 import RecentTransactionsPage from './pages/transactions/recent';
 import BlocksPage from './pages/blocks';
+import TransactionPage from './pages/transactions/detail';
+import BlockDetailPage from './pages/blocks/detail';
 
 function Dashboard() {
   return (
@@ -73,7 +75,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/transactions/recent" element={<RecentTransactionsPage />} />
+            <Route path="/transactions/:txid" element={<TransactionPage />} />
             <Route path="/blocks" element={<BlocksPage />} />
+            <Route path="/blocks/:slot" element={<BlockDetailPage />} />
           </Routes>
         </main>
       </div>

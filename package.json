@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@solana/rpc": "^2.0.0",
+    "@solana/rpc-graphql": "^2.0.0",
     "@solana/web3.js": "^0.30.8",
     "assert": "^2.1.0",
     "buffer": "^6.0.3",
