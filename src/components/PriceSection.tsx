@@ -1,126 +1,111 @@
 import React from 'react';
-import { ArrowDownRight } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { TrendingUp, DollarSign, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const priceData = [
-  { time: '10 AM', price: 16342 },
-  { time: '11 AM', price: 45350 },
-  { time: '12 PM', price: 42000 },
-  { time: '1 PM', price: 39000 },
-  { time: '2 PM', price: 36000 },
-  { time: '3 PM', price: 38000 },
-  { time: '4 PM', price: 41000 },
-  { time: '5 PM', price: 45350 },
-];
-
-const PriceChart = React.memo(() => (
-  <div className="h-64 w-full bg-white dark:bg-gray-800 rounded-lg p-4">
-    <ResponsiveContainer>
-      <AreaChart data={priceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <defs>
-          <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#EF4444" stopOpacity={0.1}/>
-            <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
-          </linearGradient>
-        </defs>
-        <XAxis 
-          dataKey="time" 
-          axisLine={false}
-          tickLine={false}
-          tick={{ fill: '#9CA3AF', fontSize: 12 }}
-        />
-        <YAxis 
-          axisLine={false}
-          tickLine={false}
-          tick={{ fill: '#9CA3AF', fontSize: 12 }}
-          domain={['dataMin - 1000', 'dataMax + 1000']}
-        />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            border: 'none',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          }}
-        />
-        <Area
-          type="monotone"
-          dataKey="price"
-          stroke="#EF4444"
-          strokeWidth={2}
-          fillOpacity={1}
-          fill="url(#colorPrice)"
-        />
-      </AreaChart>
-    </ResponsiveContainer>
-  </div>
-));
-
-PriceChart.displayName = 'PriceChart';
-
-const TimePeriodButton = React.memo(({ period, isActive, onClick }: { 
-  period: string; 
-  isActive: boolean; 
-  onClick: () => void;
-}) => (
-  <button
-    onClick={onClick}
-    className={`px-3 py-1 rounded-full text-sm ${
-      isActive
-        ? 'bg-red-100 text-red-600'
-        : 'text-gray-500 hover:bg-gray-100'
-    }`}
-  >
-    {period}
-  </button>
-));
-
-TimePeriodButton.displayName = 'TimePeriodButton';
+const data = Array.from({ length: 24 }, (_, i) => ({
+  time: i,
+  price: Math.sin(i / 3) * 10 + 50 + Math.random() * 5,
+}));
 
 export default function PriceSection() {
-  const [activePeriod, setActivePeriod] = React.useState('D');
-  const periods = ['D', 'W', 'M', 'Y'];
+  const priceChange = 2.5;
+  const isPriceUp = priceChange > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="glass-card p-6 hover-card">
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Price</h2>
-          <div className="flex items-center space-x-2 mt-1">
-            <span className="text-3xl font-bold text-gray-900 dark:text-white">$45,350</span>
-            <div className="flex items-center text-red-500">
-              <ArrowDownRight className="w-4 h-4" />
-              <span>5.16% (24h)</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-primary-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold">SOON Price</h2>
+              <div className="flex items-center space-x-2">
+                <span className="stats-value">$49.23</span>
+                <PriceChange value={priceChange} />
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex space-x-2">
-          {periods.map((period) => (
-            <TimePeriodButton
-              key={period}
-              period={period}
-              isActive={period === activePeriod}
-              onClick={() => setActivePeriod(period)}
+        <div className="flex space-x-4">
+          <MetricCard
+            icon={<BarChart3 className="w-4 h-4" />}
+            label="24h Volume"
+            value="$23.5M"
+          />
+          <MetricCard
+            icon={<TrendingUp className="w-4 h-4" />}
+            label="Market Cap"
+            value="$1.2B"
+          />
+        </div>
+      </div>
+      
+      <div className="h-[200px] mt-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgb(220, 38, 38)" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="rgb(220, 38, 38)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis
+              dataKey="time"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
             />
-          ))}
-        </div>
+            <YAxis
+              orientation="right"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+            />
+            <Tooltip
+              contentStyle={{
+                background: 'rgba(255, 255, 255, 0.8)',
+                border: 'none',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="price"
+              stroke="#DC2626"
+              strokeWidth={2}
+              fill="url(#priceGradient)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
+    </div>
+  );
+}
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-          <p className="text-sm text-gray-500">Market cap</p>
-          <p className="text-lg font-semibold">$2,260,890</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-          <p className="text-sm text-gray-500">Volume(24h)</p>
-          <div className="flex items-baseline space-x-2">
-            <p className="text-lg font-semibold">$30,260,890,235,845</p>
-            <p className="text-sm text-gray-500">235,845 BTC</p>
-          </div>
-        </div>
+function PriceChange({ value }: { value: number }) {
+  const isPositive = value > 0;
+  const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
+  const colorClass = isPositive ? 'text-green-500' : 'text-red-500';
+
+  return (
+    <div className={`flex items-center space-x-1 ${colorClass} text-sm font-medium`}>
+      <Icon className="w-4 h-4" />
+      <span>{Math.abs(value)}%</span>
+    </div>
+  );
+}
+
+function MetricCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+        {icon}
+        <span>{label}</span>
       </div>
-
-      <PriceChart />
+      <div className="mt-1 font-mono font-medium">{value}</div>
     </div>
   );
 }
