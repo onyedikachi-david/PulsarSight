@@ -77,7 +77,7 @@ export default function App() {
             <Route path="/transactions/recent" element={<RecentTransactionsPage />} />
             <Route path="/transactions/:txid" element={<TransactionPage />} />
             <Route path="/blocks" element={<BlocksPage />} />
-            <Route path="/blocks/:slot" element={<BlockDetailPage />} />
+            <Route path="/block/:height" element={<BlockDetailPage />} />
           </Routes>
         </main>
       </div>

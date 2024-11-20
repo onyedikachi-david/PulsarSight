@@ -256,7 +256,7 @@ const BlocksPage: React.FC = () => {
                   <div className="sm:grid sm:grid-cols-5 gap-4 px-6 py-4 text-sm">
                     <div className="flex items-center">
                       <Link 
-                        to={`/blocks/${block.slot?.toString()}`} 
+                        to={`/block/${block.blockHeight?.toString()}`} 
                         className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium hover:underline"
                       >
                         {block.blockHeight?.toString() || 'N/A'}
