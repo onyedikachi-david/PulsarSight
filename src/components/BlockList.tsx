@@ -1,48 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Cuboid, ArrowRight, Blocks, Timer, Search, Filter } from 'lucide-react';
 import { CopyToClipboard } from './ui/CopyToClipboard';
 import { Tooltip } from './ui/Tooltip';
 import { BlockSkeleton } from './ui/Skeleton';
+import { RPC_URL, rpcGraphQL } from '../utils/rpc';
+import { createSolanaRpc } from '@solana/rpc';
 
 interface Block {
-  height: number;
-  timestamp: string;
-  transactions: number;
-  proposer: string;
-  size: string;
-  time: string;
+  slot: string;
+  blockTime: number;
+  transactions: any[];
+  blockhash: string;
+  parentSlot: string;
+  blockHeight?: number;
 }
 
-const blocks: Block[] = [
-  {
-    height: 12345678,
-    timestamp: '2 mins ago',
-    transactions: 156,
-    proposer: '0xabcd...efgh',
-    size: '1.2 MB',
-    time: '6.5s',
-  },
-  {
-    height: 12345677,
-    timestamp: '5 mins ago',
-    transactions: 98,
-    proposer: '0xijkl...mnop',
-    size: '0.8 MB',
-    time: '6.2s',
-  },
-  {
-    height: 12345676,
-    timestamp: '8 mins ago',
-    transactions: 203,
-    proposer: '0xqrst...uvwx',
-    size: '1.5 MB',
-    time: '6.8s',
-  },
-];
-
 export default function BlockList() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchBlocks = async () => {
+    try {
+      setIsLoading(true);
+      const rpc = createSolanaRpc(RPC_URL);
+      const latestSlot = await rpc.getSlot().send();
+
+      const source = `
+        query GetRecentBlocks($slot: Slot!) {
+          block(slot: $slot) {
+            blockhash
+            blockTime
+            parentSlot
+            transactions {
+              signatures
+            }
+          }
+        }
+      `;
+
+      // Fetch last 5 blocks
+      const recentBlocks = [];
+      let currentSlot = BigInt(latestSlot);
+
+      for (let i = 0; i < 5 && currentSlot; i++) {
+        const result = await rpcGraphQL.query(source, {
+          slot: currentSlot.toString()
+        });
+
+        if (result?.data?.block) {
+          recentBlocks.push({
+            ...result.data.block,
+            slot: currentSlot.toString()
+          });
+          currentSlot = BigInt(result.data.block.parentSlot);
+        }
+      }
+
+      setBlocks(recentBlocks);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching blocks:', error);
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlocks();
+    const interval = setInterval(fetchBlocks, 10000); // Update every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  
 
   return (
     <div className="glass-card hover-card">
@@ -72,13 +101,11 @@ export default function BlockList() {
               />
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
-            <Tooltip content="Filter blocks">
-              <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <Filter className="w-4 h-4 text-gray-500" />
-              </button>
-            </Tooltip>
-            <button className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
-              View All
+            <button
+              onClick={fetchBlocks}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <Filter className="w-4 h-4 text-gray-500" />
             </button>
           </div>
         </div>
@@ -93,7 +120,7 @@ export default function BlockList() {
           </>
         ) : (
           blocks.map((block, index) => (
-            <BlockItem key={index} block={block} />
+            <BlockItem key={block.slot} block={block} />
           ))
         )}
       </div>
@@ -102,50 +129,43 @@ export default function BlockList() {
 }
 
 function BlockItem({ block }: { block: Block }) {
+  const getTimeAgo = (timestamp: number) => {
+    const seconds = Math.floor(Date.now() / 1000 - timestamp);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  };
+
   return (
-    <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
+    <div className="p-4 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <Cuboid className="w-5 h-5 text-primary-500" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <Tooltip content="Block Height">
-                <span className="font-mono font-medium">#{block.height}</span>
-              </Tooltip>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{block.timestamp}</span>
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
             </div>
-            <div className="flex items-center space-x-2 mt-1 text-sm">
-              <span className="text-gray-600 dark:text-gray-400">By</span>
-              <Tooltip content="Block Proposer">
-                <CopyToClipboard
-                  content={block.proposer}
-                  className="text-gray-600 dark:text-gray-400"
-                />
-              </Tooltip>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-mono text-sm font-medium">#{block.slot}</span>
+                <span className="text-xs text-gray-500">{block.blockTime ? getTimeAgo(Number(block.blockTime)) : ''}</span>
+              </div>
+              <div className="flex items-center space-x-2 mt-0.5">
+                <span className="text-xs text-gray-500">Hash:</span>
+                <Tooltip content="Copy Block Hash">
+                  <CopyToClipboard
+                    content={block.blockhash}
+                    className="text-xs font-mono text-gray-600 truncate max-w-[120px]"
+                  />
+                </Tooltip>
+              </div>
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-4 text-right">
-          <MetricItem
-            icon={<Timer className="w-4 h-4" />}
-            label="Block Time"
-            value={block.time}
-            tooltip="Time taken to produce this block"
-          />
-          <MetricItem
-            icon={<ArrowRight className="w-4 h-4" />}
-            label="Txns"
-            value={block.transactions.toString()}
-            tooltip="Number of transactions in this block"
-          />
-          <MetricItem
-            icon={<Blocks className="w-4 h-4" />}
-            label="Size"
-            value={block.size}
-            tooltip="Total size of the block"
-          />
+        <div className="text-right">
+          <div className="text-sm font-medium">{block.transactions?.length || 0} txs</div>
+          <div className="text-xs text-gray-500">{((block.transactions?.length || 0) * 0.265).toFixed(2)} SOL</div>
         </div>
       </div>
     </div>

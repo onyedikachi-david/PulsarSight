@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Tooltip } from './ui/Tooltip';
+import { RPC_URL, rpcGraphQL } from '../utils/rpc';
+import { createSolanaRpc } from '@solana/rpc';
 
-interface PriceSectionProps {
+interface PriceData {
   price: number;
   priceChange24h: number;
   volume24h: number;
@@ -11,21 +13,56 @@ interface PriceSectionProps {
   totalSupply: number;
 }
 
-export default function PriceSection({
-  price = 123.45,
-  priceChange24h = 5.67,
-  volume24h = 45678901,
-  marketCap = 1234567890,
-  circulatingSupply = 100000000,
-  totalSupply = 150000000,
-}: PriceSectionProps) {
-  const isPriceUp = priceChange24h > 0;
+export default function PriceSection() {
+  const [priceData, setPriceData] = useState<PriceData>({
+    price: 0,
+    priceChange24h: 0,
+    volume24h: 0,
+    marketCap: 0,
+    circulatingSupply: 0,
+    totalSupply: 0
+  });
+
+  const fetchPriceData = async () => {
+    try {
+      const rpc = createSolanaRpc(RPC_URL);
+      const supplyInfo = await rpc.getSupply().send();
+
+      if (supplyInfo) {
+        const totalSupply = Number(supplyInfo.value.total);
+        const circulatingSupply = Number(supplyInfo.value.circulating);
+        
+        // For this example, we're using a mock price since we don't have a real price feed
+        // In a real application, you would fetch this from a price oracle or API
+        const mockPrice = 0.00; // Set to 0 for SOON network
+        
+        setPriceData({
+          price: mockPrice,
+          priceChange24h: 0,
+          volume24h: 0,
+          marketCap: mockPrice * totalSupply,
+          circulatingSupply,
+          totalSupply
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching price data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPriceData();
+    const interval = setInterval(fetchPriceData, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  const isPriceUp = priceData.priceChange24h > 0;
   const TrendIcon = isPriceUp ? TrendingUp : TrendingDown;
-  const formattedPrice = price.toLocaleString('en-US', {
+  const formattedPrice = priceData.price.toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
   });
-  const formattedPriceChange = Math.abs(priceChange24h).toFixed(2) + '%';
+  const formattedPriceChange = Math.abs(priceData.priceChange24h).toFixed(2) + '%';
 
   return (
     <div className="glass-card hover-card">
@@ -66,26 +103,26 @@ export default function PriceSection({
           <PriceMetric
             icon={<Wallet className="w-5 h-5" />}
             label="24h Volume"
-            value={formatCurrency(volume24h)}
+            value={formatCurrency(priceData.volume24h)}
             tooltip="Trading volume in the last 24 hours"
           />
           <PriceMetric
             icon={<BarChart3 className="w-5 h-5" />}
             label="Market Cap"
-            value={formatCurrency(marketCap)}
+            value={formatCurrency(priceData.marketCap)}
             tooltip="Total market capitalization"
           />
           <PriceMetric
             icon={<ArrowUpRight className="w-5 h-5" />}
             label="Circulating Supply"
-            value={formatNumber(circulatingSupply)}
-            subValue={`${((circulatingSupply / totalSupply) * 100).toFixed(1)}%`}
+            value={formatNumber(priceData.circulatingSupply)}
+            subValue={`${((priceData.circulatingSupply / priceData.totalSupply) * 100).toFixed(1)}%`}
             tooltip="Number of tokens in circulation"
           />
           <PriceMetric
             icon={<ArrowDownRight className="w-5 h-5" />}
             label="Total Supply"
-            value={formatNumber(totalSupply)}
+            value={formatNumber(priceData.totalSupply)}
             tooltip="Maximum number of tokens"
           />
         </div>

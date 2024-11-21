@@ -1,58 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, CheckCircle2, Clock, XCircle, Search, Filter, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { CopyToClipboard } from './ui/CopyToClipboard';
 import { Tooltip } from './ui/Tooltip';
 import { TransactionSkeleton } from './ui/Skeleton';
-
+import { RPC_URL, rpcGraphQL } from '../utils/rpc';
+import { createSolanaRpc } from '@solana/rpc';
 interface Transaction {
+  status: any;
+  type: string;
   hash: string;
+  timestamp: string;
   from: string;
   to: string;
   value: string;
-  status: 'success' | 'failed' | 'pending';
-  timestamp: string;
-  type: 'send' | 'receive' | 'contract';
+  signatures: string[];
+  meta: {
+    err: any | null;
+    fee: string;
+    logMessages: string[];
+  } | null;
+  slot: string;
+  blockTime: number | null;
 }
 
-const transactions: Transaction[] = [
-  {
-    hash: '0x1234...5678',
-    from: '0xabcd...efgh',
-    to: '0xijkl...mnop',
-    value: '123.45 SOON',
-    status: 'success',
-    timestamp: '2 mins ago',
-    type: 'send',
-  },
-  {
-    hash: '0x8765...4321',
-    from: '0xqrst...uvwx',
-    to: '0xyza...bcde',
-    value: '45.67 SOON',
-    status: 'pending',
-    timestamp: '5 mins ago',
-    type: 'contract',
-  },
-  {
-    hash: '0x9876...5432',
-    from: '0xfghi...jklm',
-    to: '0xnopq...rstu',
-    value: '89.01 SOON',
-    status: 'failed',
-    timestamp: '10 mins ago',
-    type: 'receive',
-  },
-];
-
-const statusConfig = {
-  success: { icon: CheckCircle2, className: 'text-green-500', label: 'Success' },
-  failed: { icon: XCircle, className: 'text-red-500', label: 'Failed' },
-  pending: { icon: Clock, className: 'text-yellow-500 animate-pulse', label: 'Pending' },
-};
-
 export default function TransactionList() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchTransactions = async () => {
+    try {
+      setIsLoading(true);
+      const rpc = createSolanaRpc(RPC_URL);
+      const latestSlot = await rpc.getSlot().send();
+
+      const source = `
+        query GetRecentTransactions($slot: Slot!) {
+          block(slot: $slot) {
+            transactions {
+              signatures
+              meta {
+                err
+                fee
+                logMessages
+              }
+              slot
+              blockTime
+            }
+          }
+        }
+      `;
+
+      const result = await rpcGraphQL.query(source, {
+        slot: latestSlot.toString()
+      });
+
+      if (result?.data?.block?.transactions) {
+        setTransactions(result.data.block.transactions);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      setIsLoading(false);
+    }
+  };
+  
+
+  useEffect(() => {
+    fetchTransactions();
+    const interval = setInterval(fetchTransactions, 10000); // Update every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const getTimeAgo = (timestamp: number) => {
+    const seconds = Math.floor(Date.now() / 1000 - timestamp);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  };
 
   return (
     <div className="glass-card hover-card">
@@ -112,7 +139,19 @@ export default function TransactionList() {
 }
 
 function TransactionItem({ transaction }: { transaction: Transaction }) {
-  const StatusIcon = statusConfig[transaction.status].icon;
+
+  const statusConfig = {
+    success: { icon: CheckCircle2, className: 'text-green-500', label: 'Success' },
+    failed: { icon: XCircle, className: 'text-red-500', label: 'Failed' },
+    pending: { icon: Clock, className: 'text-yellow-500 animate-pulse', label: 'Pending' },
+  } as const;
+  
+  type TransactionStatus = keyof typeof statusConfig;
+  const status: TransactionStatus = (transaction.meta?.err === null ? 'success' : 
+    transaction.meta?.err ? 'failed' : 
+    'pending');
+const StatusIcon = statusConfig[status].icon;
+  // const StatusIcon = statusConfig[status].icon;
   const TransactionIcon = transaction.type === 'send' ? ArrowUpRight : 
                          transaction.type === 'receive' ? ArrowDownRight : 
                          Clock;
@@ -121,8 +160,8 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
     <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Tooltip content={statusConfig[transaction.status].label}>
-            <StatusIcon className={`w-5 h-5 ${statusConfig[transaction.status].className}`} />
+        <Tooltip content={statusConfig[status].label}>
+            <StatusIcon className={`w-5 h-5 ${statusConfig[status].className}`} />
           </Tooltip>
           <div>
             <div className="flex items-center space-x-2">
@@ -163,7 +202,7 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
             </div>
           </Tooltip>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+            {transaction.type?.charAt(0).toUpperCase() + transaction.type?.slice(1)}
           </div>
         </div>
       </div>
