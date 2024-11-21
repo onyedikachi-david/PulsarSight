@@ -581,7 +581,7 @@ const RecentTransactionsPage: React.FC = () => {
                             </div>
                             <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
                               {tx.signatures?.[0] 
-                                ? `${tx.signatures[0].substring(0, 8)}...${tx.signatures[0].substring(tx.signatures[0].length - 8)}`
+                                ? `${tx.signatures[0].slice(0, 4)}...${tx.signatures[0].slice(-4)}`
                                 : 'Signature not available'
                               }
                             </span>

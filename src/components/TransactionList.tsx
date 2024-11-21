@@ -6,13 +6,6 @@ import { TransactionSkeleton } from './ui/Skeleton';
 import { RPC_URL, rpcGraphQL } from '../utils/rpc';
 import { createSolanaRpc } from '@solana/rpc';
 interface Transaction {
-  status: any;
-  type: string;
-  hash: string;
-  timestamp: string;
-  from: string;
-  to: string;
-  value: string;
   signatures: string[];
   meta: {
     err: any | null;
@@ -54,6 +47,7 @@ export default function TransactionList() {
       const result = await rpcGraphQL.query(source, {
         slot: latestSlot.toString()
       });
+      console.log(result);
 
       if (result?.data?.block?.transactions) {
         setTransactions(result.data.block.transactions);
@@ -82,7 +76,7 @@ export default function TransactionList() {
   };
 
   return (
-    <div className="glass-card hover-card">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -121,88 +115,109 @@ export default function TransactionList() {
         </div>
       </div>
       
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        {isLoading ? (
-          <>
-            <TransactionSkeleton />
-            <TransactionSkeleton />
-            <TransactionSkeleton />
-          </>
-        ) : (
-          transactions.map((tx, index) => (
-            <TransactionItem key={index} transaction={tx} />
-          ))
-        )}
+      <div className="max-h-[400px] overflow-y-auto">
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          {isLoading ? (
+            <>
+              <TransactionSkeleton />
+              <TransactionSkeleton />
+              <TransactionSkeleton />
+            </>
+          ) : transactions.length === 0 ? (
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+              No transactions found
+            </div>
+          ) : (
+            transactions.map((tx, index) => (
+              <TransactionItem key={index} transaction={tx} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 function TransactionItem({ transaction }: { transaction: Transaction }) {
+  const getTimeAgo = (timestamp: number) => {
+    const seconds = Math.floor(Date.now() / 1000 - timestamp);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  };
 
-  const statusConfig = {
-    success: { icon: CheckCircle2, className: 'text-green-500', label: 'Success' },
-    failed: { icon: XCircle, className: 'text-red-500', label: 'Failed' },
-    pending: { icon: Clock, className: 'text-yellow-500 animate-pulse', label: 'Pending' },
-  } as const;
-  
-  type TransactionStatus = keyof typeof statusConfig;
-  const status: TransactionStatus = (transaction.meta?.err === null ? 'success' : 
-    transaction.meta?.err ? 'failed' : 
-    'pending');
-const StatusIcon = statusConfig[status].icon;
-  // const StatusIcon = statusConfig[status].icon;
-  const TransactionIcon = transaction.type === 'send' ? ArrowUpRight : 
-                         transaction.type === 'receive' ? ArrowDownRight : 
-                         Clock;
+  // Determine transaction type based on log messages
+  const getTransactionType = (tx: Transaction) => {
+    const instructions = tx.meta?.logMessages || [];
+    if (instructions.some(msg => msg.includes("Transfer"))) {
+      return { type: "Transfer", icon: ArrowUpRight, color: "text-blue-500" };
+    } else if (instructions.some(msg => msg.includes("Vote"))) {
+      return { type: "Vote", icon: CheckCircle2, color: "text-green-500" };
+    }
+    return { type: "Contract", icon: Clock, color: "text-gray-500" };
+  };
+
+  const txType = getTransactionType(transaction);
+  const TypeIcon = txType.icon;
+
+  const formatSignature = (signature: string) => {
+    if (!signature) return 'Signature not available';
+    return `${signature.slice(0, 4)}...${signature.slice(-4)}`;
+  };
 
   return (
     <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-        <Tooltip content={statusConfig[status].label}>
-            <StatusIcon className={`w-5 h-5 ${statusConfig[status].className}`} />
-          </Tooltip>
+          <div className={`p-2 rounded-lg ${
+            transaction.meta?.err 
+              ? 'bg-red-100 dark:bg-red-900/20' 
+              : 'bg-green-100 dark:bg-green-900/20'
+          }`}>
+            {transaction.meta?.err ? (
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+            )}
+          </div>
           <div>
             <div className="flex items-center space-x-2">
-              <Tooltip content="Transaction Hash">
-                <CopyToClipboard
-                  content={transaction.hash}
+              <Tooltip content={transaction.signatures[0]}>
+              <CopyToClipboard
+                  content={transaction.signatures[0]}
                   className="font-mono text-sm"
+                  displayText={formatSignature(transaction.signatures[0])}
                 />
               </Tooltip>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{transaction.timestamp}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {transaction.blockTime ? getTimeAgo(transaction.blockTime) : 'Pending'}
+              </span>
             </div>
             <div className="flex items-center space-x-2 mt-1 text-sm">
-              <Tooltip content="From Address">
-                <CopyToClipboard
-                  content={transaction.from}
-                  className="font-mono text-gray-600 dark:text-gray-400"
-                />
-              </Tooltip>
-              <ArrowRight className="w-3 h-3 text-gray-400" />
-              <Tooltip content="To Address">
-                <CopyToClipboard
-                  content={transaction.to}
-                  className="font-mono text-gray-600 dark:text-gray-400"
-                />
-              </Tooltip>
+              <span className="text-gray-500">Slot:</span>
+              <span className="font-mono text-gray-600 dark:text-gray-400">
+                {transaction.slot}
+              </span>
+              {transaction.meta?.fee && (
+                <>
+                  <span className="text-gray-500">•</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Fee: {transaction.meta.fee} lamports
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
         <div className="text-right">
-          <Tooltip content="Transaction Value">
-            <div className="font-mono font-medium flex items-center justify-end space-x-2">
-              <TransactionIcon className={`w-4 h-4 ${
-                transaction.type === 'send' ? 'text-red-500' :
-                transaction.type === 'receive' ? 'text-green-500' :
-                'text-blue-500'
-              }`} />
-              <span>{transaction.value}</span>
-            </div>
-          </Tooltip>
+          <div className="flex items-center space-x-2">
+            <TypeIcon className={`w-4 h-4 ${txType.color}`} />
+            <span className="text-sm font-medium">{txType.type}</span>
+          </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            {transaction.type?.charAt(0).toUpperCase() + transaction.type?.slice(1)}
+            {transaction.meta?.logMessages?.length || 0} instructions
           </div>
         </div>
       </div>
