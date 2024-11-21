@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { rpcGraphQL } from '../../utils/rpc';
-import { Blocks, ChevronLeft, FileText, XCircle, CheckCircle, Database, Link2, Inbox, Users, Shield, Lock, Unlock, ExternalLink, Copy, ChevronRight, ArrowRightLeft, Code2, Terminal, X, Users2, BarChart2, Clock, Zap, Activity } from 'lucide-react';
+import { Blocks, ChevronLeft, FileText, XCircle, CheckCircle, Database, Link2, Inbox, Users, Shield, Lock, Unlock, ExternalLink, Copy, ChevronRight, ArrowRightLeft, Code2, Terminal, X, Users2, BarChart2, Clock, Zap, Activity, ChevronDown } from 'lucide-react';
 
 interface Block {
   blockhash: string;
@@ -468,6 +468,186 @@ const ProgramInvocations: React.FC<{ block: Block }> = ({ block }) => {
   );
 };
 
+const TransactionItem: React.FC<{
+  tx: Block['transactions'][0];
+  index: number;
+  onViewAccounts: () => void;
+  onViewInstructions: () => void;
+}> = ({ tx, index, onViewAccounts, onViewInstructions }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="border-b border-gray-200 dark:border-gray-700 last:border-0">
+      {/* Transaction Header - Always visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between"
+      >
+        <div className="flex items-center space-x-3">
+          <div className={`p-2 rounded-lg ${
+            tx.meta?.err
+              ? 'bg-red-100 dark:bg-red-900/20'
+              : 'bg-green-100 dark:bg-green-900/20'
+          }`}>
+            {tx.meta?.err ? (
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            ) : (
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+            )}
+          </div>
+          <div>
+            <div className="flex items-center space-x-2 text-left">
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                Transaction #{index + 1}
+              </span>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                tx.meta?.err
+                  ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200'
+                  : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200'
+              }`}>
+                {tx.meta?.err ? 'Failed' : 'Success'}
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {tx.signatures[0].slice(0, 8)}...{tx.signatures[0].slice(-8)}
+            </p>
+          </div>
+        </div>
+        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+          isExpanded ? 'transform rotate-180' : ''
+        }`} />
+      </button>
+
+      {/* Collapsible Content */}
+      <div className={`overflow-hidden transition-all duration-200 ${
+        isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <div className="px-6 pb-4 space-y-4">
+          {/* Transaction Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-10">
+            {/* Left Column */}
+            <div className="space-y-2">
+              {/* Signature */}
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Signature:</span>
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono text-xs text-gray-900 dark:text-white truncate max-w-[200px]">
+                    {tx.signatures[0]}
+                  </span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(tx.signatures[0]);
+                    }}
+                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg
+                      hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200"
+                    title="Copy signature"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Slot & Version */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Slot:</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{tx.slot?.toString()}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Version:</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{tx.version}</span>
+                </div>
+              </div>
+
+              {/* Recent Blockhash */}
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Recent Blockhash:</span>
+                <span className="font-mono text-xs text-gray-900 dark:text-white truncate max-w-[200px]">
+                  {tx.message.recentBlockhash}
+                </span>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-2">
+              {/* Fee & Compute Units */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Fee:</span>
+                  <span className="text-sm text-gray-900 dark:text-white">
+                    {(Number(tx.meta.fee) / 1e9).toFixed(6)} SOL
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Compute Units:</span>
+                  <span className="text-sm text-gray-900 dark:text-white">
+                    {tx.meta.computeUnitsConsumed.toString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-4">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewInstructions();
+                  }}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg
+                    text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20
+                    hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                >
+                  <Code2 className="w-4 h-4 mr-1.5" />
+                  {tx.message.instructions.length} Instructions
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewAccounts();
+                  }}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg
+                    text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20
+                    hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                >
+                  <Users className="w-4 h-4 mr-1.5" />
+                  {tx.message.accountKeys.length} Accounts
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Balance Changes */}
+          {tx.meta.preBalances.length > 0 && (
+            <div className="pl-10 space-y-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Balance Changes:</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {tx.message.accountKeys.map((account, idx) => {
+                  const preBalance = BigInt(tx.meta.preBalances[idx]);
+                  const postBalance = BigInt(tx.meta.postBalances[idx]);
+                  const change = postBalance - preBalance;
+                  if (change === 0n) return null;
+                  
+                  return (
+                    <div key={idx} className="flex items-center space-x-2 text-sm bg-gray-50 dark:bg-gray-900/30 rounded-lg p-2">
+                      <span className="font-mono text-xs truncate max-w-[100px]">
+                        {account.pubkey.slice(0, 4)}...{account.pubkey.slice(-4)}
+                      </span>
+                      <span className={change > 0n ? 'text-green-600' : 'text-red-600'}>
+                        {change > 0n ? '+' : ''}{(Number(change) / 1e9).toFixed(6)} SOL
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BlockDetailPage: React.FC = () => {
   const { height = '' } = useParams<{ height: string }>();
   const [block, setBlock] = useState<Block | null>(null);
@@ -764,168 +944,20 @@ const BlockDetailPage: React.FC = () => {
           </div>
 
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {block.transactions?.map((tx, index) => (
-              <div key={index} className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200">
-                <div className="flex flex-col space-y-4">
-                  {/* Transaction Header */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${
-                        tx.meta?.err
-                          ? 'bg-red-100 dark:bg-red-900/20'
-                          : 'bg-green-100 dark:bg-green-900/20'
-                      }`}>
-                        {tx.meta?.err ? (
-                          <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                        ) : (
-                          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            Transaction #{index + 1}
-                          </span>
-                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            tx.meta?.err
-                              ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200'
-                              : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-                          }`}>
-                            {tx.meta?.err ? 'Failed' : 'Success'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <Link
-                      to={`/transactions/${tx.signatures[0]}`}
-                      className="group p-2 text-gray-400 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
-                    >
-                      <div className="p-2 rounded-lg group-hover:bg-purple-100 dark:group-hover:bg-purple-900/20 transition-colors">
-                        <ChevronRight className="w-5 h-5" />
-                      </div>
-                    </Link>
-                  </div>
-
-                  {/* Transaction Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-10">
-                    {/* Left Column */}
-                    <div className="space-y-2">
-                      {/* Signature */}
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Signature:</span>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-mono text-xs text-gray-900 dark:text-white truncate max-w-[200px]">
-                            {tx.signatures[0]}
-                          </span>
-                          <button 
-                            onClick={() => navigator.clipboard.writeText(tx.signatures[0])}
-                            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg
-                              hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200"
-                            title="Copy signature"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" 
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Slot & Version */}
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Slot:</span>
-                          <span className="text-sm text-gray-900 dark:text-white">{tx.slot?.toString()}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Version:</span>
-                          <span className="text-sm text-gray-900 dark:text-white">{tx.version}</span>
-                        </div>
-                      </div>
-
-                      {/* Recent Blockhash */}
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Recent Blockhash:</span>
-                        <span className="font-mono text-xs text-gray-900 dark:text-white truncate max-w-[200px]">
-                          {tx.message.recentBlockhash}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Right Column */}
-                    <div className="space-y-2">
-                      {/* Fee & Compute Units */}
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Fee:</span>
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            {tx.meta.fee.toString()} lamports
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Compute Units:</span>
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            {tx.meta.computeUnitsConsumed.toString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Instructions Count */}
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Instructions:</span>
-                        <button
-                          onClick={() => {
-                            setSelectedTransaction(tx);
-                            setIsInstructionModalOpen(true);
-                          }}
-                          className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
-                        >
-                          View {tx.message.instructions.length} Instructions
-                        </button>
-                      </div>
-
-                      {/* Account Keys Count */}
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Accounts Involved:</span>
-                        <button
-                          onClick={() => {
-                            setSelectedTransaction(tx);
-                            setIsAccountModalOpen(true);
-                          }}
-                          className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
-                        >
-                          View {tx.message.accountKeys.length} Accounts
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Balance Changes */}
-                  {tx.meta.preBalances.length > 0 && (
-                    <div className="pl-10 space-y-1">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Balance Changes:</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {tx.message.accountKeys.map((account: { pubkey: string }, idx: number) => {
-                          const preBalance = BigInt(tx.meta.preBalances[idx]);
-                          const postBalance = BigInt(tx.meta.postBalances[idx]);
-                          const change = postBalance - preBalance;
-                          if (change === 0n) return null;
-                          
-                          return (
-                            <div key={idx} className="flex items-center space-x-2 text-sm">
-                              <span className="font-mono text-xs truncate max-w-[100px]">{account.pubkey}</span>
-                              <span className={change > 0n ? 'text-green-600' : 'text-red-600'}>
-                                {change > 0n ? '+' : ''}{change.toString()} lamports
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+            {block.transactions.map((tx, index) => (
+              <TransactionItem
+                key={tx.signatures[0]}
+                tx={tx}
+                index={index}
+                onViewAccounts={() => {
+                  setSelectedTransaction(tx);
+                  setIsAccountModalOpen(true);
+                }}
+                onViewInstructions={() => {
+                  setSelectedTransaction(tx);
+                  setIsInstructionModalOpen(true);
+                }}
+              />
             ))}
 
             {/* Empty State */}
