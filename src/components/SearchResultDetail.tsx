@@ -17,6 +17,7 @@ import {
 import TokenDetail from './SearchResultDetail/TokenDetail';
 import ProgramDetail from './SearchResultDetail/ProgramDetail';
 import VoteDetail from './SearchResultDetail/VoteDetail';
+import AddressDetail from './SearchResultDetail/AddressDetail';
 
 interface SearchResultDetailProps {
   result: SearchResult;
@@ -240,6 +241,10 @@ const SearchResultDetail: React.FC<SearchResultDetailProps> = ({ result }) => {
           performanceHistory={validatorPerformance?.epochPerformance}
           loading={loading}
         />
+      )}
+
+      {result.type === 'address' && isBaseAccount(result.data) && !isVoteAccount(result.data) && (
+        <AddressDetail data={result.data} />
       )}
     </div>
   );

@@ -13,6 +13,12 @@ export interface BaseAccount {
   lamports: bigint;
   executable: boolean;
   rentEpoch: bigint;
+  ownerProgram: {
+    address: string;
+    executable: boolean;
+    lamports: bigint;
+  };
+  space: number;
 }
 
 export interface TokenAccount extends BaseAccount {
@@ -24,10 +30,12 @@ export interface TokenAccount extends BaseAccount {
     symbol?: string;
     holders?: number;
   };
-  owner: {
-    address: string;
+  tokenAmount: {
+    amount: string;
+    decimals: number;
+    uiAmount: number;
+    uiAmountString: string;
   };
-  amount: string;  // Token balance
   state: string;
 }
 
@@ -160,7 +168,7 @@ export const isTransaction = (data: SearchResultData): data is Transaction => {
 };
 
 export const isTokenAccount = (data: SearchResultData): data is TokenAccount => {
-  return 'mint' in data && 'owner' in data;
+  return 'mint' in data && 'tokenAmount' in data;
 };
 
 export const isProgramAccount = (data: SearchResultData): data is ProgramAccount => {
@@ -199,6 +207,11 @@ export class SearchService {
             lamports
             executable
             rentEpoch
+            ownerProgram {
+              address
+              executable
+              lamports
+            }
             ... on TokenAccount {
               mint {
                 address
@@ -213,8 +226,11 @@ export class SearchService {
                   }
                 }
               }
-              owner {
-                address
+              tokenAmount {
+                amount
+                decimals
+                uiAmount
+                uiAmountString
               }
               state
             }
@@ -279,9 +295,7 @@ export class SearchService {
                 supply
               }
             }
-            owner {
-              address
-            }
+            amount
             state
           }
         }

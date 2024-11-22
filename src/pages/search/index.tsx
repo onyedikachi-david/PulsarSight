@@ -4,9 +4,10 @@ import { rpcGraphQL } from '../../utils/rpc';
 import { SearchService, SearchResult as SearchResultType, SearchFilters as SearchFiltersType, BaseAccount, TokenAccount, MintAccount, VoteAccount, Transaction, SearchResultData, isTransaction, isTokenAccount, isProgramAccount, isBaseAccount, ProgramAccount } from '../../services/search';
 import {
   Search, Filter, Clock, Hash, Wallet, Coins, FileText,
-  ChevronRight, RefreshCw, AlertCircle, CheckCircle, XCircle
+  ChevronRight, RefreshCw, AlertCircle, CheckCircle, XCircle, ChevronDown
 } from 'lucide-react';
 import SearchResultDetail from '../../components/SearchResultDetail';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchResult extends SearchResultType {}
 interface SearchFilters extends SearchFiltersType {}
@@ -247,10 +248,21 @@ const SearchPage: React.FC = () => {
                 {results.map((result, index) => (
                   <div key={index}>
                     {/* Preview Card */}
-                    <div 
-                      className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                    <motion.div 
+                      className={`
+                        p-4 bg-white dark:bg-gray-700 border border-gray-200 
+                        dark:border-gray-600 rounded-lg cursor-pointer
+                        ${result.expanded 
+                          ? 'shadow-md border-blue-200 dark:border-blue-800' 
+                          : 'hover:border-blue-200 dark:hover:border-blue-800'
+                        }
+                      `}
+                      whileHover={{ 
+                        scale: 1.01,
+                        transition: { duration: 0.2 }
+                      }}
+                      whileTap={{ scale: 0.99 }}
                       onClick={() => {
-                        // Add state to track which result is expanded
                         const newResults = [...results];
                         newResults[index] = { 
                           ...result, 
@@ -258,6 +270,9 @@ const SearchPage: React.FC = () => {
                         };
                         setResults(newResults);
                       }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
                     >
                       {/* Keep the existing preview cards */}
                       {result.type === 'transaction' && isTransaction(result.data) && (
@@ -290,6 +305,12 @@ const SearchPage: React.FC = () => {
                               {(Number(result.data.meta?.fee) || 0) / 1e9} SOON
                             </span>
                           </div>
+                          <motion.div
+                            animate={{ rotate: result.expanded ? 180 : 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <ChevronDown className="h-5 w-5 text-gray-400" />
+                          </motion.div>
                         </div>
                       )}
 
@@ -371,14 +392,27 @@ const SearchPage: React.FC = () => {
                           </div>
                         </div>
                       )}
-                    </div>
+                    </motion.div>
 
-                    {/* Detailed View */}
-                    {result.expanded && (
-                      <div className="mt-4">
-                        <SearchResultDetail result={result} />
-                      </div>
-                    )}
+                    {/* Detailed View with Animation */}
+                    <AnimatePresence>
+                      {result.expanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ 
+                            duration: 0.3,
+                            ease: "easeInOut"
+                          }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-4">
+                            <SearchResultDetail result={result} />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ))}
               </div>
