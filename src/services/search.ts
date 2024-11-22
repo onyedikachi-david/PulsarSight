@@ -110,6 +110,40 @@ export interface Transaction {
   };
 }
 
+// Add these interfaces
+export interface TokenTransfer {
+  signature: string;
+  timestamp: number;
+  from: {
+    address: string;
+    label?: string;
+  };
+  to: {
+    address: string;
+    label?: string;
+  };
+  amount: string;
+  decimals: number;
+}
+
+export interface ProgramInvocation {
+  signature: string;
+  timestamp: number;
+  caller: {
+    address: string;
+    label?: string;
+  };
+  success: boolean;
+  computeUnits: number;
+}
+
+export interface ValidatorVote {
+  slot: number;
+  timestamp: number;
+  confirmationCount: number;
+  success: boolean;
+}
+
 // Union type for search result data
 export type SearchResultData = BaseAccount | TokenAccount | MintAccount | VoteAccount | ProgramAccount | Transaction;
 
@@ -117,6 +151,7 @@ export type SearchResultData = BaseAccount | TokenAccount | MintAccount | VoteAc
 export interface SearchResult {
   type: 'transaction' | 'address' | 'token' | 'program';
   data: SearchResultData;
+  expanded?: boolean;
 }
 
 // Type guards
@@ -139,6 +174,11 @@ export const isMintAccount = (data: SearchResultData): data is MintAccount => {
 // Add to the exports
 export const isBaseAccount = (data: SearchResultData): data is BaseAccount => {
   return 'address' in data && 'lamports' in data;
+};
+
+// Add this with other type guards
+export const isVoteAccount = (data: SearchResultData): data is VoteAccount => {
+  return 'votes' in data && 'node' in data && 'commission' in data;
 };
 
 // Update the TransactionResponse interface to match GraphQL execution result
@@ -344,5 +384,52 @@ export class SearchService {
     } catch {
       return false;
     }
+  }
+
+  static async getVoteHistory(address: string): Promise<any> {
+    const source = `
+      query GetVoteHistory($address: Address!) {
+        voteAccount(address: $address) {
+          votes {
+            slot
+            confirmationCount
+          }
+          epochCredits {
+            epoch
+            credits
+            previousCredits
+          }
+          lastTimestamp {
+            slot
+            timestamp
+          }
+        }
+      }
+    `;
+
+    return await rpcGraphQL.query(source, { address });
+  }
+
+  static async getValidatorPerformance(address: string): Promise<any> {
+    const source = `
+      query GetValidatorPerformance($address: Address!) {
+        validator(address: $address) {
+          epochPerformance {
+            epoch
+            credits
+            previousCredits
+            timestamp
+          }
+          recentVotes {
+            slot
+            timestamp
+            confirmationCount
+            success
+          }
+        }
+      }
+    `;
+
+    return await rpcGraphQL.query(source, { address });
   }
 }

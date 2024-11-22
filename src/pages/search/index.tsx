@@ -6,6 +6,7 @@ import {
   Search, Filter, Clock, Hash, Wallet, Coins, FileText,
   ChevronRight, RefreshCw, AlertCircle, CheckCircle, XCircle
 } from 'lucide-react';
+import SearchResultDetail from '../../components/SearchResultDetail';
 
 interface SearchResult extends SearchResultType {}
 interface SearchFilters extends SearchFiltersType {}
@@ -237,134 +238,154 @@ const SearchPage: React.FC = () => {
               </div>
             )}
 
-            {results.length > 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center p-12">
+                <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
+              </div>
+            ) : results.length > 0 ? (
               <div className="space-y-4">
                 {results.map((result, index) => (
-                  <div
-                    key={index}
-                    className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
-                  >
-                    {/* Render different result types */}
-                    {result.type === 'transaction' && isTransaction(result.data) && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Hash className="h-5 w-5 text-blue-500" />
-                          <div>
-                            <Link
-                              to={`/tx/${result.data.signatures?.[0] || ''}`}
-                              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                            >
-                              {result.data.signatures?.[0] 
-                                ? `${result.data.signatures[0].slice(0, 8)}...${result.data.signatures[0].slice(-8)}`
-                                : 'Unknown Transaction'}
-                            </Link>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {result.data.blockTime 
-                                ? new Date(Number(result.data.blockTime) * 1000).toLocaleString()
-                                : 'Unknown Time'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {!result.data.meta?.err ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-red-500" />
-                          )}
-                          <span className="text-sm text-gray-500">
-                            {(Number(result.data.meta?.fee) || 0) / 1e9} SOON
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {result.type === 'address' && isBaseAccount(result.data) && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Wallet className="h-5 w-5 text-purple-500" />
-                          <div>
-                            <Link
-                              to={`/address/${result.data.address}`}
-                              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                            >
-                              {result.data.address}
-                            </Link>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Balance: {((result.data.lamports || 0n) / BigInt(1e9)).toString()} SOON
-                            </p>
-                          </div>
-                        </div>
-                        {isProgramAccount(result.data) && (
-                          <div className="flex items-center gap-2">
-                            <div className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-sm">
-                              Program
+                  <div key={index}>
+                    {/* Preview Card */}
+                    <div 
+                      className="p-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => {
+                        // Add state to track which result is expanded
+                        const newResults = [...results];
+                        newResults[index] = { 
+                          ...result, 
+                          expanded: !result.expanded 
+                        };
+                        setResults(newResults);
+                      }}
+                    >
+                      {/* Keep the existing preview cards */}
+                      {result.type === 'transaction' && isTransaction(result.data) && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Hash className="h-5 w-5 text-blue-500" />
+                            <div>
+                              <Link
+                                to={`/tx/${result.data.signatures?.[0] || ''}`}
+                                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                              >
+                                {result.data.signatures?.[0] 
+                                  ? `${result.data.signatures[0].slice(0, 8)}...${result.data.signatures[0].slice(-8)}`
+                                  : 'Unknown Transaction'}
+                              </Link>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {result.data.blockTime 
+                                  ? new Date(Number(result.data.blockTime) * 1000).toLocaleString()
+                                  : 'Unknown Time'}
+                              </p>
                             </div>
-                            {result.data.authority && (
-                              <div className="text-sm text-gray-500">
-                                Authority: {result.data.authority.address.slice(0, 4)}...{result.data.authority.address.slice(-4)}
-                              </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {!result.data.meta?.err ? (
+                              <CheckCircle className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-red-500" />
                             )}
+                            <span className="text-sm text-gray-500">
+                              {(Number(result.data.meta?.fee) || 0) / 1e9} SOON
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      )}
 
-                    {result.type === 'token' && isTokenAccount(result.data) && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Coins className="h-5 w-5 text-yellow-500" />
-                          <div>
-                            <Link
-                              to={`/token/${result.data.mint.address}`}
-                              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                            >
-                              {result.data.mint.name || result.data.mint.address} 
-                              {result.data.mint.symbol && `(${result.data.mint.symbol})`}
-                            </Link>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Supply: {result.data.mint.supply?.toLocaleString()} • 
-                              Holders: {result.data.mint.holders?.toLocaleString()}
-                            </p>
+                      {result.type === 'address' && isBaseAccount(result.data) && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Wallet className="h-5 w-5 text-purple-500" />
+                            <div>
+                              <Link
+                                to={`/address/${result.data.address}`}
+                                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                              >
+                                {result.data.address}
+                              </Link>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Balance: {((result.data.lamports || 0n) / BigInt(1e9)).toString()} SOON
+                              </p>
+                            </div>
                           </div>
+                          {isProgramAccount(result.data) && (
+                            <div className="flex items-center gap-2">
+                              <div className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-sm">
+                                Program
+                              </div>
+                              {result.data.authority && (
+                                <div className="text-sm text-gray-500">
+                                  Authority: {result.data.authority.address.slice(0, 4)}...{result.data.authority.address.slice(-4)}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {result.data.mint.decimals} decimals
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {result.type === 'program' && isProgramAccount(result.data) && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-indigo-500" />
-                          <div>
-                            <Link
-                              to={`/program/${result.data.address}`}
-                              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                            >
-                              {result.data.address}
-                            </Link>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {result.data.authority ? 
-                                `Authority: ${result.data.authority.address.slice(0, 4)}...${result.data.authority.address.slice(-4)}` :
-                                'Native Program'}
-                            </p>
+                      {result.type === 'token' && isTokenAccount(result.data) && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Coins className="h-5 w-5 text-yellow-500" />
+                            <div>
+                              <Link
+                                to={`/token/${result.data.mint.address}`}
+                                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                              >
+                                {result.data.mint.name || result.data.mint.address} 
+                                {result.data.mint.symbol && `(${result.data.mint.symbol})`}
+                              </Link>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Supply: {result.data.mint.supply?.toLocaleString()} • 
+                                Holders: {result.data.mint.holders?.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {result.data.mint.decimals} decimals
                           </div>
                         </div>
-                        <div className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-sm">
-                          Program
+                      )}
+
+                      {result.type === 'program' && isProgramAccount(result.data) && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-indigo-500" />
+                            <div>
+                              <Link
+                                to={`/program/${result.data.address}`}
+                                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                              >
+                                {result.data.address}
+                              </Link>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {result.data.authority ? 
+                                  `Authority: ${result.data.authority.address.slice(0, 4)}...${result.data.authority.address.slice(-4)}` :
+                                  'Native Program'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-sm">
+                            Program
+                          </div>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Detailed View */}
+                    {result.expanded && (
+                      <div className="mt-4">
+                        <SearchResultDetail result={result} />
                       </div>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              !loading && (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                  {searchQuery ? 'No results found' : 'Enter a search query to begin'}
-                </div>
-              )
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                {searchQuery ? 'No results found' : 'Enter a search query to begin'}
+              </div>
             )}
           </div>
         </div>
