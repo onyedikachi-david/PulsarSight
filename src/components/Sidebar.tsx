@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Blocks, FileText, Activity, Users, Database } from 'lucide-react';
+import { Home, Blocks, FileText, Activity, Users, Database, Search } from 'lucide-react';
 import NavItem from './ui/NavItem';
 
 interface SidebarProps {
@@ -31,16 +31,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             isActive={location.pathname === '/'}
           />
           <NavItem
+            to="/search"
+            icon={<Search className="h-5 w-5" />}
+            text="Search"
+            isActive={location.pathname === '/search'}
+          />
+          <NavItem
             to="/blocks"
             icon={<Blocks className="h-5 w-5" />}
             text="Blocks"
             isActive={location.pathname === '/blocks'}
           />
           <NavItem
-            to="/transactions/recent"
+            to="/transactions"
             icon={<Activity className="h-5 w-5" />}
             text="Transactions"
-            isActive={location.pathname === '/transactions/recent'}
+            isActive={location.pathname === '/transactions'}
           />
           <NavItem
             to="/validators"

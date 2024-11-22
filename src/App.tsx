@@ -11,6 +11,7 @@ import RecentTransactionsPage from './pages/transactions/recent';
 import BlocksPage from './pages/blocks';
 import TransactionPage from './pages/transactions/detail';
 import BlockDetailPage from './pages/blocks/detail';
+import SearchPage from './pages/search';
 import { RPC_URL, rpcGraphQL } from './utils/rpc';
 import { BarChart2, Activity, Shield, Users, Zap, Clock } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
@@ -270,10 +271,11 @@ export default function App() {
         <main className="flex-1 p-8">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/transactions/recent" element={<RecentTransactionsPage />} />
-            <Route path="/transactions/:txid" element={<TransactionPage />} />
+            <Route path="/transactions" element={<RecentTransactionsPage />} />
+            <Route path="/tx/:txid" element={<TransactionPage />} />
             <Route path="/blocks" element={<BlocksPage />} />
-            <Route path="/block/:height" element={<BlockDetailPage />} />
+            <Route path="/block/:slot" element={<BlockDetailPage />} />
+            <Route path="/search" element={<SearchPage />} />
           </Routes>
         </main>
       </div>

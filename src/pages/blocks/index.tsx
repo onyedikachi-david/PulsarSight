@@ -362,7 +362,7 @@ const BlocksPage: React.FC = () => {
                       {/* Block Hash */}
                       <div className="flex items-center group">
                         <Link 
-                          to={`/transactions/${block.blockhash}`}
+                          to={`/tx/${block.blockhash}`}
                           className="flex items-center space-x-2 group"
                         >
                           <div className="font-mono text-sm text-purple-600 dark:text-purple-400 

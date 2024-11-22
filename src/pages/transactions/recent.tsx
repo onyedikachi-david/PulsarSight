@@ -518,7 +518,7 @@ const RecentTransactionsPage: React.FC = () => {
                         </div>
                       </div>
                       <Link
-                        to={`/transactions/${tx.signatures[0]}`}
+                        to={`/tx/${tx.signatures[0]}`}
                         className="text-purple-500 hover:text-purple-600"
                       >
                         View Details
@@ -581,7 +581,7 @@ const RecentTransactionsPage: React.FC = () => {
                             </div>
                             <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
                               {tx.signatures?.[0] 
-                                ? `${tx.signatures[0].slice(0, 4)}...${tx.signatures[0].slice(-4)}`
+                                ? `${tx.signatures[0].substring(0, 8)}...${tx.signatures[0].substring(tx.signatures[0].length - 8)}`
                                 : 'Signature not available'
                               }
                             </span>
@@ -632,7 +632,7 @@ const RecentTransactionsPage: React.FC = () => {
                       {/* View Details Link */}
                       {tx.signatures?.[0] && (
                         <Link
-                          to={`/transactions/${tx.signatures[0]}`}
+                          to={`/tx/${tx.signatures[0]}`}
                           className="flex items-center space-x-2 px-4 py-2 rounded-lg
                             text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400
                             group-hover:bg-purple-50 dark:group-hover:bg-purple-900/10

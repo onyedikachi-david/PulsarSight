@@ -36,7 +36,7 @@ export const mainNavigation: NavigationItem[] = [
   { 
     name: 'Transactions', 
     icon: ArrowLeftRight, 
-    href: '/transactions/recent',
+    href: '/transactions',
     description: 'View transaction history'
   },
   { 
