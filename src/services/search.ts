@@ -446,4 +446,57 @@ export class SearchService {
 
     return await rpcGraphQL.query(source, { address });
   }
+
+  static async getAddressHistory(address: string): Promise<any> {
+    const source = `
+      query GetAddressHistory($address: Address!) {
+        account(address: $address) {
+          address
+          lamports
+          executable
+          rentEpoch
+          ownerProgram {
+            address
+            executable
+            lamports
+          }
+          ... on TokenAccount {
+            mint {
+              address
+              ... on MintAccount {
+                decimals
+                supply
+                mintAuthority {
+                  address
+                }
+                freezeAuthority {
+                  address
+                }
+              }
+            }
+            tokenAmount {
+              amount
+              decimals
+              uiAmount
+              uiAmountString
+            }
+          }
+        }
+        # Get program accounts owned by this address
+        programAccounts(programAddress: $address) {
+          address
+          lamports
+          executable
+          rentEpoch
+          ownerProgram {
+            address
+            executable
+            lamports
+          }
+        }
+      }
+    `;
+  
+    return await rpcGraphQL.query(source, { address });
+  }
 }

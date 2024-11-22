@@ -1,16 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Wallet, Database, Code, FileText,
-  ExternalLink, HardDrive, Cpu, Info
+  Wallet, Database, Code, FileText, History,
+  ExternalLink, HardDrive, Cpu, Info, Coins,
+  Clock, TrendingUp, ArrowUpRight, ArrowDownRight,
+  Loader, AlertTriangle
 } from 'lucide-react';
-import { BaseAccount } from '../../services/search';
+import { 
+  LineChart, Line, XAxis, YAxis, Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
+import { BaseAccount, SearchService } from '../../services/search';
 
 interface AddressDetailProps {
   data: BaseAccount;
 }
 
 const AddressDetail: React.FC<AddressDetailProps> = ({ data }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [addressHistory, setAddressHistory] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchAddressHistory = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const history = await SearchService.getAddressHistory(data.address);
+        console.log('history: ', history);
+        setAddressHistory(history.data.account);
+      } catch (err) {
+        setError('Failed to load address history');
+        console.error('Address history fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAddressHistory();
+  }, [data.address]);
+
   return (
     <div className="space-y-6">
       {/* Address Header */}
@@ -111,7 +140,86 @@ const AddressDetail: React.FC<AddressDetailProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Recent Activity Section could be added here */}
+      {/* Token Balances Section */}
+      {addressHistory?.account?.tokenAmount && (
+        <div className="space-y-4">
+          <h4 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
+            <Coins className="h-5 w-5 text-gray-500" />
+            Token Balance
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <Link
+                  to={`/token/${addressHistory.account.mint.address}`}
+                  className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                >
+                  {addressHistory.account.mint.symbol || 
+                   addressHistory.account.mint.name || 
+                   addressHistory.account.mint.address}
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+                <span className="text-sm text-gray-500">
+                  {addressHistory.account.tokenAmount.uiAmount.toLocaleString()} tokens
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Program Accounts section */}
+      {addressHistory?.programAccounts?.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
+            <Code className="h-5 w-5 text-gray-500" />
+            Program Accounts
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Address
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Balance (SOL)
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Executable
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+                {addressHistory.programAccounts.map((account: any) => (
+                  <tr key={account.address}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Link
+                        to={`/address/${account.address}`}
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                      >
+                        {account.address}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {(Number(account.lamports) / 1e9).toFixed(9)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        account.executable
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200'
+                      }`}>
+                        {account.executable ? 'Yes' : 'No'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
