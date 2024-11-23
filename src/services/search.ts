@@ -1,200 +1,211 @@
-import { rpcGraphQL } from '../utils/rpc';
-import { ExecutionResult, GraphQLError } from 'graphql';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { rpcGraphQL } from '../utils/rpc'
+import { ExecutionResult, GraphQLError } from 'graphql'
 
 export interface SearchFilters {
-  types: string[];
-  timeRange: string;
-  status?: string;
+  types: string[]
+  timeRange: string
+  status?: string
 }
 
 // Base account types
 export interface BaseAccount {
-  address: string;
-  lamports: bigint;
-  executable: boolean;
-  rentEpoch: bigint;
+  address: string
+  lamports: bigint
+  executable: boolean
+  rentEpoch: bigint
   ownerProgram: {
-    address: string;
-    executable: boolean;
-    lamports: bigint;
-  };
-  space: number;
+    address: string
+    executable: boolean
+    lamports: bigint
+  }
+  space: number
 }
 
 export interface TokenAccount extends BaseAccount {
   mint: {
-    address: string;
-    decimals: number;
-    supply: string;
-    name?: string;
-    symbol?: string;
-    holders?: number;
-  };
+    address: string
+    decimals: number
+    supply: string
+    name?: string
+    symbol?: string
+    holders?: number
+  }
   tokenAmount: {
-    amount: string;
-    decimals: number;
-    uiAmount: number;
-    uiAmountString: string;
-  };
-  state: string;
+    amount: string
+    decimals: number
+    uiAmount: number
+    uiAmountString: string
+  }
+  state: string
 }
 
 export interface MintAccount extends BaseAccount {
   mintAuthority: {
-    address: string;
-  };
-  supply: string;
-  decimals: number;
-  isInitialized: boolean;
+    address: string
+  }
+  supply: string
+  decimals: number
+  isInitialized: boolean
   freezeAuthority?: {
-    address: string;
-  };
+    address: string
+  }
 }
 
 export interface VoteAccount extends BaseAccount {
   votes: Array<{
-    slot: number;
-    confirmationCount: number;
-  }>;
+    slot: number
+    confirmationCount: number
+  }>
   node: {
-    address: string;
-  };
+    address: string
+  }
   authorizedVoters: Array<{
-    epoch: number;
+    epoch: number
     authorizedVoter: {
-      address: string;
-    };
-  }>;
+      address: string
+    }
+  }>
   authorizedWithdrawer: {
-    address: string;
-  };
+    address: string
+  }
   lastTimestamp: {
-    slot: number;
-    timestamp: number;
-  };
+    slot: number
+    timestamp: number
+  }
   epochCredits: Array<{
-    epoch: number;
-    credits: number;
-    previousCredits: number;
-  }>;
-  commission: number;
+    epoch: number
+    credits: number
+    previousCredits: number
+  }>
+  commission: number
 }
 
 // Add ProgramAccount interface
 export interface ProgramAccount extends BaseAccount {
   programData: {
-    slot: number;
-    data: string;  // Base64 encoded program data
-  };
+    slot: number
+    data: string // Base64 encoded program data
+  }
   authority?: {
-    address: string;
-  };
+    address: string
+  }
 }
 
 // Transaction type
 export interface Transaction {
-  signatures: string[];
-  blockTime: number;
-  slot: number;
+  signatures: string[]
+  blockTime: number
+  slot: number
   meta: {
-    err: any;
-    fee: number;
+    err: unknown
+    fee: number
     status: {
-      __typename: 'TransactionStatusOk' | 'TransactionStatusErr';
+      __typename: 'TransactionStatusOk' | 'TransactionStatusErr'
       // Will be populated based on __typename
-    };
-  };
+    }
+  }
   message: {
     accountKeys: {
-      pubkey: string;
-      signer: boolean;
-      writable: boolean;
-      source?: string;
-    }[];
+      pubkey: string
+      signer: boolean
+      writable: boolean
+      source?: string
+    }[]
     instructions: {
-      programId: string;
+      programId: string
       // accounts and data are only available in GenericInstruction
-    }[];
-  };
+    }[]
+  }
 }
 
 // Add these interfaces
 export interface TokenTransfer {
-  signature: string;
-  timestamp: number;
+  signature: string
+  timestamp: number
   from: {
-    address: string;
-    label?: string;
-  };
+    address: string
+    label?: string
+  }
   to: {
-    address: string;
-    label?: string;
-  };
-  amount: string;
-  decimals: number;
+    address: string
+    label?: string
+  }
+  amount: string
+  decimals: number
 }
 
 export interface ProgramInvocation {
-  signature: string;
-  timestamp: number;
+  signature: string
+  timestamp: number
   caller: {
-    address: string;
-    label?: string;
-  };
-  success: boolean;
-  computeUnits: number;
+    address: string
+    label?: string
+  }
+  success: boolean
+  computeUnits: number
 }
 
 export interface ValidatorVote {
-  slot: number;
-  timestamp: number;
-  confirmationCount: number;
-  success: boolean;
+  slot: number
+  timestamp: number
+  confirmationCount: number
+  success: boolean
 }
 
 // Union type for search result data
-export type SearchResultData = BaseAccount | TokenAccount | MintAccount | VoteAccount | ProgramAccount | Transaction;
+export type SearchResultData =
+  | BaseAccount
+  | TokenAccount
+  | MintAccount
+  | VoteAccount
+  | ProgramAccount
+  | Transaction
 
 // Search result with discriminated union
 export interface SearchResult {
-  type: 'transaction' | 'address' | 'token' | 'program';
-  data: SearchResultData;
-  expanded?: boolean;
+  type: 'transaction' | 'address' | 'token' | 'program'
+  data: SearchResultData
+  expanded?: boolean
 }
 
 // Type guards
 export const isTransaction = (data: SearchResultData): data is Transaction => {
-  return 'signatures' in data && 'blockTime' in data;
-};
+  return 'signatures' in data && 'blockTime' in data
+}
 
-export const isTokenAccount = (data: SearchResultData): data is TokenAccount => {
-  return 'mint' in data && 'tokenAmount' in data;
-};
+export const isTokenAccount = (
+  data: SearchResultData
+): data is TokenAccount => {
+  return 'mint' in data && 'tokenAmount' in data
+}
 
-export const isProgramAccount = (data: SearchResultData): data is ProgramAccount => {
-  return 'executable' in data && data.executable === true;
-};
+export const isProgramAccount = (
+  data: SearchResultData
+): data is ProgramAccount => {
+  return 'executable' in data && data.executable === true
+}
 
 export const isMintAccount = (data: SearchResultData): data is MintAccount => {
-  return 'mintAuthority' in data && 'supply' in data;
-};
+  return 'mintAuthority' in data && 'supply' in data
+}
 
 // Add to the exports
 export const isBaseAccount = (data: SearchResultData): data is BaseAccount => {
-  return 'address' in data && 'lamports' in data;
-};
+  return 'address' in data && 'lamports' in data
+}
 
 // Add this with other type guards
 export const isVoteAccount = (data: SearchResultData): data is VoteAccount => {
-  return 'votes' in data && 'node' in data && 'commission' in data;
-};
+  return 'votes' in data && 'node' in data && 'commission' in data
+}
 
 // Update the TransactionResponse interface to match GraphQL execution result
 interface TransactionQueryResult {
-  transaction?: Transaction;
+  transaction?: Transaction
 }
 
-type TransactionResponse = ExecutionResult<TransactionQueryResult>;
+type TransactionResponse = ExecutionResult<TransactionQueryResult>
 
 export class SearchService {
   static async searchAccounts(query: string): Promise<any> {
@@ -274,9 +285,9 @@ export class SearchService {
             }
           }
         }
-      `;
+      `
 
-      return await rpcGraphQL.query(source, { address: query });
+      return await rpcGraphQL.query(source, { address: query })
     }
 
     // For token searches
@@ -300,36 +311,37 @@ export class SearchService {
           }
         }
       }
-    `;
+    `
 
     // Execute token search
-    const tokenResults = await rpcGraphQL.query(tokenSource, { query });
+    const tokenResults = await rpcGraphQL.query(tokenSource, { query })
 
     return {
       data: {
         tokens: tokenResults?.data?.tokens || []
       }
-    };
+    }
   }
 
-  static async searchTransactions(query: string, filters: SearchFilters): Promise<TransactionResponse> {
+  static async searchTransactions(
+    query: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _filters: SearchFilters
+  ): Promise<TransactionResponse> {
     // Add signature validation before making the query
     if (!this.isValidTransactionSignature(query)) {
       // Create a proper GraphQLError
-      const error = new GraphQLError(
-        "Invalid transaction signature format",
-        {
-          extensions: {
-            code: 'INVALID_SIGNATURE',
-            argumentName: 'signature'
-          }
+      const error = new GraphQLError('Invalid transaction signature format', {
+        extensions: {
+          code: 'INVALID_SIGNATURE',
+          argumentName: 'signature'
         }
-      );
+      })
 
       return {
         data: null,
         errors: [error]
-      } as TransactionResponse;
+      } as TransactionResponse
     }
 
     const source = `
@@ -368,19 +380,19 @@ export class SearchService {
           }
         }
       }
-    `;
+    `
 
-    const response = await rpcGraphQL.query(source, { 
+    const response = await rpcGraphQL.query(source, {
       signature: query
-    });
+    })
 
-    return response as TransactionResponse;
+    return response as TransactionResponse
   }
 
   // Add helper method to validate transaction signatures
   private static isValidTransactionSignature(signature: string): boolean {
     // Basic validation for Solana transaction signatures
-    return /^[1-9A-HJ-NP-Za-km-z]{87,88}$/.test(signature);
+    return /^[1-9A-HJ-NP-Za-km-z]{87,88}$/.test(signature)
   }
 
   static async validateAddress(address: string): Promise<boolean> {
@@ -391,12 +403,12 @@ export class SearchService {
             address
           }
         }
-      `;
+      `
 
-      const response = await rpcGraphQL.query(source, { address });
-      return !!response?.data?.account;
+      const response = await rpcGraphQL.query(source, { address })
+      return !!response?.data?.account
     } catch {
-      return false;
+      return false
     }
   }
 
@@ -419,9 +431,9 @@ export class SearchService {
           }
         }
       }
-    `;
+    `
 
-    return await rpcGraphQL.query(source, { address });
+    return await rpcGraphQL.query(source, { address })
   }
 
   static async getValidatorPerformance(address: string): Promise<any> {
@@ -442,9 +454,9 @@ export class SearchService {
           }
         }
       }
-    `;
+    `
 
-    return await rpcGraphQL.query(source, { address });
+    return await rpcGraphQL.query(source, { address })
   }
 
   static async getAddressHistory(address: string): Promise<any> {
@@ -495,8 +507,8 @@ export class SearchService {
           }
         }
       }
-    `;
-  
-    return await rpcGraphQL.query(source, { address });
+    `
+
+    return await rpcGraphQL.query(source, { address })
   }
 }

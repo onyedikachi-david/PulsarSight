@@ -649,7 +649,7 @@ const TransactionItem: React.FC<{
 };
 
 const BlockDetailPage: React.FC = () => {
-  const { height = '' } = useParams<{ height: string }>();
+  const { slot = '' } = useParams<{ slot: string }>();
   const [block, setBlock] = useState<Block | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -659,8 +659,8 @@ const BlockDetailPage: React.FC = () => {
 
   useEffect(() => {
     const fetchBlock = async () => {
-      if (!height) {
-        setError('Block height not provided');
+      if (!slot) {
+        setError('Block slot not provided');
         setLoading(false);
         return;
       }
@@ -707,10 +707,10 @@ const BlockDetailPage: React.FC = () => {
         `;
 
         const result = await rpcGraphQL.query(blockSource, {
-          slot: BigInt(height) as any
+          slot: BigInt(slot) as any
         });
 
-        console.log("Block result", result);
+        console.log("Block result: ", result);
 
         if (!result?.data?.block) {
           setError('Block not found');
@@ -728,7 +728,7 @@ const BlockDetailPage: React.FC = () => {
     };
 
     fetchBlock();
-  }, [height]);
+  }, [slot]);
 
   if (loading) {
     return (
@@ -851,7 +851,7 @@ const BlockDetailPage: React.FC = () => {
               </div>
               <div className="flex space-x-3">
                 <Link
-                  to={height ? `/block/${(BigInt(height) - 1n).toString()}` : '/blocks'}
+                  to={slot ? `/block/${(BigInt(slot) - 1n).toString()}` : '/blocks'}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg
                     text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800
                     border border-gray-300 dark:border-gray-600
@@ -862,7 +862,7 @@ const BlockDetailPage: React.FC = () => {
                   Previous Block
                 </Link>
                 <Link
-                  to={height ? `/block/${(BigInt(height) + 1n).toString()}` : '/blocks'}
+                  to={slot ? `/block/${(BigInt(slot) + 1n).toString()}` : '/blocks'}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg
                     text-white bg-gradient-to-r from-purple-500 to-blue-500
                     hover:from-purple-600 hover:to-blue-600

@@ -1,29 +1,42 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React from 'react'
+import { Link } from 'react-router-dom'
 import {
-  FileText, Terminal, History, Activity,
-  Shield, Users, Cpu, ExternalLink,
-  ArrowUpRight, Clock
-} from 'lucide-react';
-import { 
-  AreaChart, Area, XAxis, YAxis, Tooltip, 
-  ResponsiveContainer, BarChart, Bar
-} from 'recharts';
-import { ProgramAccount, ProgramInvocation } from '../../services/search';
+  FileText,
+  Terminal,
+  History,
+  Activity,
+  Shield,
+  Cpu,
+  ExternalLink,
+  Clock
+} from 'lucide-react'
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts'
+import { ProgramAccount, ProgramInvocation } from '../../services/search'
 
 interface ProgramDetailProps {
-  data: ProgramAccount;
-  recentInvocations?: ProgramInvocation[];
+  data: ProgramAccount
+  recentInvocations?: ProgramInvocation[]
 }
 
-const ProgramDetail: React.FC<ProgramDetailProps> = ({ data, recentInvocations = [] }) => {
+const ProgramDetail: React.FC<ProgramDetailProps> = ({
+  data,
+  recentInvocations = []
+}) => {
   return (
     <div className="space-y-6">
       {/* Program Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-50 dark:bg-indigo-900/50 rounded-lg">
-            <FileText className="h-6 w-6 text-indigo-500" />
+          <div className="rounded-lg bg-indigo-50 p-2 dark:bg-indigo-900/50">
+            <FileText className="size-6 text-indigo-500" />
           </div>
           <div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
@@ -31,26 +44,26 @@ const ProgramDetail: React.FC<ProgramDetailProps> = ({ data, recentInvocations =
             </h3>
             <Link
               to={`/address/${data.address}`}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              className="flex items-center gap-1 text-sm text-blue-600 hover:underline dark:text-blue-400"
             >
               {data.address}
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="size-3" />
             </Link>
           </div>
         </div>
         {data.authority && (
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Shield className="h-4 w-4" />
+            <Shield className="size-4" />
             Authority: {data.authority.address}
           </div>
         )}
       </div>
 
       {/* Program Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-            <Terminal className="h-4 w-4" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+            <Terminal className="size-4" />
             Program Size
           </div>
           <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
@@ -58,9 +71,9 @@ const ProgramDetail: React.FC<ProgramDetailProps> = ({ data, recentInvocations =
           </span>
         </div>
 
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-            <Clock className="h-4 w-4" />
+        <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+            <Clock className="size-4" />
             Last Update
           </div>
           <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
@@ -68,9 +81,9 @@ const ProgramDetail: React.FC<ProgramDetailProps> = ({ data, recentInvocations =
           </span>
         </div>
 
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
-            <Cpu className="h-4 w-4" />
+        <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+            <Cpu className="size-4" />
             Recent Invocations
           </div>
           <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
@@ -80,25 +93,27 @@ const ProgramDetail: React.FC<ProgramDetailProps> = ({ data, recentInvocations =
       </div>
 
       {/* Usage Chart */}
-      <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <h4 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-          <Activity className="h-5 w-5 text-gray-500" />
+      <div className="rounded-lg bg-gray-50 p-6 dark:bg-gray-800">
+        <h4 className="text-md mb-4 flex items-center gap-2 font-medium text-gray-900 dark:text-white">
+          <Activity className="size-5 text-gray-500" />
           Program Usage
         </h4>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={recentInvocations}>
-              <XAxis 
-                dataKey="timestamp" 
-                tickFormatter={(timestamp) => new Date(timestamp * 1000).toLocaleDateString()}
+              <XAxis
+                dataKey="timestamp"
+                tickFormatter={(timestamp) =>
+                  new Date(timestamp * 1000).toLocaleDateString()
+                }
               />
               <YAxis />
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
-                    const data = payload[0].payload as ProgramInvocation;
+                    const data = payload[0].payload as ProgramInvocation
                     return (
-                      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                      <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {new Date(data.timestamp * 1000).toLocaleString()}
                         </p>
@@ -109,9 +124,9 @@ const ProgramDetail: React.FC<ProgramDetailProps> = ({ data, recentInvocations =
                           Caller: {data.caller.label || data.caller.address}
                         </p>
                       </div>
-                    );
+                    )
                   }
-                  return null;
+                  return null
                 }}
               />
               <Area
@@ -128,52 +143,54 @@ const ProgramDetail: React.FC<ProgramDetailProps> = ({ data, recentInvocations =
 
       {/* Recent Invocations */}
       <div className="space-y-4">
-        <h4 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
-          <History className="h-5 w-5 text-gray-500" />
+        <h4 className="text-md flex items-center gap-2 font-medium text-gray-900 dark:text-white">
+          <History className="size-5 text-gray-500" />
           Recent Invocations
         </h4>
-        
+
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Time
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Caller
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Compute Units
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Status
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900">
               {recentInvocations.map((invocation, index) => (
                 <tr key={invocation.signature}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {new Date(invocation.timestamp * 1000).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">
                     <Link
                       to={`/address/${invocation.caller.address}`}
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      className="text-sm text-blue-600 hover:underline dark:text-blue-400"
                     >
                       {invocation.caller.label || invocation.caller.address}
                     </Link>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {invocation.computeUnits.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      invocation.success
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
-                    }`}>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs ${
+                        invocation.success
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
+                      }`}
+                    >
                       {invocation.success ? 'Success' : 'Failed'}
                     </span>
                   </td>
@@ -184,7 +201,7 @@ const ProgramDetail: React.FC<ProgramDetailProps> = ({ data, recentInvocations =
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ProgramDetail; 
+export default ProgramDetail

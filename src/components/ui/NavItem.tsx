@@ -1,16 +1,22 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { cn } from '../../lib/utils';
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { cn } from '../../lib/utils'
 
 interface NavItemProps {
-  to: string;
-  icon: React.ReactNode;
-  text: string;
-  isActive?: boolean;
-  onClick?: () => void;
+  to: string
+  icon: React.ReactNode
+  text: string
+  isActive?: boolean
+  onClick?: () => void
 }
 
-const NavItem = ({ to, icon, text, isActive = false, onClick }: NavItemProps) => {
+const NavItem = ({
+  to,
+  icon,
+  text,
+  isActive = false,
+  onClick
+}: NavItemProps) => {
   return (
     <Link
       to={to}
@@ -22,7 +28,7 @@ const NavItem = ({ to, icon, text, isActive = false, onClick }: NavItemProps) =>
           : 'text-gray-700 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400'
       )}
     >
-      <span 
+      <span
         className={cn(
           'mr-3',
           isActive
@@ -34,7 +40,7 @@ const NavItem = ({ to, icon, text, isActive = false, onClick }: NavItemProps) =>
       </span>
       {text}
     </Link>
-  );
-};
+  )
+}
 
-export default NavItem;
+export default NavItem

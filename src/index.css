@@ -22,7 +22,7 @@
   .glass-card {
     @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm;
   }
-  
+
   .hover-card {
     @apply transition-all duration-200 hover:shadow-glow hover:border-primary-300 dark:hover:border-primary-700;
   }

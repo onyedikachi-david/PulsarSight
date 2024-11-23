@@ -1,3 +1,3 @@
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon } from 'lucide-react'
 
-export type IconType = LucideIcon;
+export type IconType = LucideIcon
