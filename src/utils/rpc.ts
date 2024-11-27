@@ -9,8 +9,7 @@ import { createSolanaRpcGraphQL } from '@solana/rpc-graphql'
 // https://api.mainnet-beta.solana.com
 // https://mainnet.helius-rpc.com/?api-key=96a0e515-066a-41aa-815d-a67bc962af8b
 // https://solemn-fluent-glitter.solana-devnet.quiknode.pro/a4b0c2d7fa048c4818a5f20dd20018d16ebdc4d3
-export const RPC_URL =
-  'https://solemn-fluent-glitter.solana-mainnet.quiknode.pro/a4b0c2d7fa048c4818a5f20dd20018d16ebdc4d3'
+export const RPC_URL = 'https://rpc.devnet.soo.network/rpc'
 
 // Create the regular connection for backward compatibility
 const connection = new Connection(RPC_URL, 'confirmed' as Commitment)

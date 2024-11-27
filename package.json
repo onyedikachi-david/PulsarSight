@@ -26,6 +26,8 @@
     "@solana/rpc": "^2.0.0",
     "@solana/rpc-graphql": "^2.0.0",
     "@solana/web3.js": "^1.95.5",
+    "@tanstack/react-query": "^5.61.0",
+    "@tanstack/react-query-devtools": "^5.61.0",
     "assert": "^2.1.0",
     "buffer": "^6.0.3",
     "chart.js": "^4.4.6",
